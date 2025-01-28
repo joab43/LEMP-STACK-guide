@@ -98,3 +98,115 @@ mysql -u root -p
 
 
 
+## STEP 4 - Instalation and Configuration of PHP
+
+### Install PHP and php-fpm
+
+#### Fedora
+```bash
+sudo dnf install php 
+```
+> If the packages php-fpm and php-mysqlnd dosen't been installed, run the next comands
+
+```bash
+sudo dnf install php-fpm
+```
+```bash
+sudo dnf install php-mysqlnd
+```
+#### Ubuntu
+```bash
+sudo apt install php 
+```
+> If the packages php-fpm and php-mysqlnd dosen't been installed, run the next comands
+
+```bash
+sudo apt install php-fpm
+```
+```bash
+sudo apt install php-mysqlnd
+```
+#### Configure php-fpm for nginx
+Edit the file ***www.conf*** on the next directory
+```bash
+sudo nano /etc/php-fpm.d/www.conf
+```
+
+And change the next lines of code  
+#### User and group
+```ini
+user = nginx
+group = nginx
+```
+#### Listen socket
+```ini
+listen = /run/php-fpm/www.sock
+```
+
+#### Enable PHP service
+
+``` bash
+sudo systemctl enable php-fpm
+sudo systemctl start php-fpm
+
+sudo systemctl status php-fpm
+```
+
+## Cofiguration NGINX for PHP
+
+Create a file on the next directory:
+
+```bash
+sudo nano /etc/nginx/conf.d/default.conf
+```
+
+And paste the next text:
+
+```nginx
+server {
+    listen 80;
+    server_name localhost;
+
+    root /usr/share/nginx/html;
+    index index.php index.html index.htm;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+
+    location ~ \.php$ {
+        include fastcgi_params;
+        fastcgi_pass unix:/run/php-fpm/www.sock;
+        fastcgi_index index.php;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+    }
+
+    location ~ /\.ht {
+        deny all;
+    }
+}
+```
+
+>Save and close the file with ***ctrl + o*** for save an ***ctrl + x*** for exit
+
+### Restar Nginx
+```bash 
+sudo systemctl restart nginx
+```
+
+### Test that php are conected to nginx
+
+Create a ***info.php*** on the next directory
+```bash
+sudo nano /usr/share/nginx/html/info.php
+```
+
+In the file add the next lines of code
+```php
+<?php
+phpinfo();
+?>
+```
+>Save and close the file with ***ctrl + o*** for save an ***ctrl + x*** for exit
+
+>Now you can acces to http://localhost/info.php on your browser
